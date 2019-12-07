@@ -21,7 +21,7 @@ class GuessNumEnv(gym.Env):
         assert type(action) == np.ndarray, "The action should be ndarray"
         assert self.current_digits is not None, "The reset method should be called before using this method"
         assert action.shape==(self.num_digits,), "The size of action is not compatible, expected ndarray of shape ({}, ) but got {} ".format(self.num_digits, action.shape)
-        assert self.num_gen_space.contains(action), "This action:{} is not in the action space".format(action)
+        assert self.num_gen_space.contains(action, repeating=True), "This action:{} is not in the action space".format(action)
         
         unique_nums = np.unique(action)
         

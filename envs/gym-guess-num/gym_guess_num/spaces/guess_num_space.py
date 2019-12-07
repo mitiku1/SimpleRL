@@ -9,9 +9,11 @@ class NumGenSpace(spaces.space.Space):
         super(NumGenSpace, self).__init__((num_digits, ), np.uint8)
     def sample(self):
         return self.__sample()
-    def contains(self, x):
+    def contains(self, x, repeating=None):
+        if repeating is None:
+            repeating = self.repeat_digits
         if x.shape==(self.num_digits,):
-            if self.repeat_digits:
+            if repeating:
                 for digit in x:
                     if digit>9 or digit <= 0:
                         return False
