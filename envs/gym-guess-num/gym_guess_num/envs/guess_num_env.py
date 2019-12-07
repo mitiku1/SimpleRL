@@ -13,7 +13,7 @@ class GuessNumEnv(gym.Env):
         self.num_digits = num_digits
         self.repeat_digits = repeat_digits
         self.current_digits = None
-        self.obserable_size = observable_size
+        self.observable_size = observable_size
         self.observed = None
         super(GuessNumEnv, self).__init__()
         
@@ -22,37 +22,45 @@ class GuessNumEnv(gym.Env):
         assert self.current_digits is not None, "The reset method should be called before using this method"
         assert action.shape==(self.num_digits,), "The size of action is not compatible, expected ndarray of shape ({}, ) but got {} ".format(self.num_digits, action.shape)
         assert self.num_gen_space.contains(action), "This action:{} is not in the action space".format(action)
-        if not self.repeat_digits:
-            unique_nums = np.unique(action)
-            if unique_nums.shape == action.shape:
-                digits_observation = 0 # Number of correctly guessed digits
-                order_observation = 0 # Number of correctly guessed positions
-                for i in range(len(unique_nums)):
-                    if unique_nums[i]==self.current_digits[i]:
-                        order_observation += 1
-                    if unique_nums[i] in self.current_digits:
-                        digits_observation += 1
-                
-                return (digits_observation, order_observation)
-            observation = np.array(action.tolist()+[digits_observation, order_observation])
-            self.observed.push(observation)
-            
-            self.done, reward = self.calculate_reward(digits_observation, order_observation)
-            return copy.deepcopy(self.observed), reward, done
+        
+        unique_nums = np.unique(action)
+        
+        digits_observation = 0 # Number of correctly guessed digits
+        order_observation = 0 # Number of correctly guessed positions
+        if unique_nums.shape == action.shape:
+            for i in range(len(unique_nums)):
+                if unique_nums[i]==self.current_digits[i]:
+                    order_observation += 1
+                if unique_nums[i] in self.current_digits:
+                    digits_observation += 1
         else:
-            pass
+            for i in range(len(unique_nums)):
+                if unique_nums[i] in self.current_digits:
+                    digits_observation += 1
+            for i in range(len(action)):
+                if action[i] == self.current_digits[i]:
+                    order_observation += 1
+    
+        observation = np.array(action.tolist()+[digits_observation, order_observation])
+        self.observed.push(observation)
+        
+        reward, self.done = self.calculate_reward(digits_observation, order_observation)
+        return copy.deepcopy(self.observed.to_numpy_array()), reward, self.done
+                
     def reset(self):
         self.num_gen_space = NumGenSpace(self.num_digits, self.repeat_digits)
         self.current_digits = self.num_gen_space.sample()
         self.done = False
         self.observed = CustomQueue(self.num_digits + 2,  self.observable_size)
         
+        return copy.deepcopy(self.observed.to_numpy_array()), 0, self.done
+        
     def render(self, mode='human'):
         print("Current digits:", self.current_digits.tolist())
     def close(self):
         pass
     def calculate_reward(self, digits_observation, order_observation):
-        if self.digits_observation== self.num_digits and order_observation == self.num_digits:
+        if digits_observation== self.num_digits and order_observation == self.num_digits:
             reward = 100
             done = True
         else:

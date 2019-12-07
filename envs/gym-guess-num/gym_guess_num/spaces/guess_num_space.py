@@ -27,4 +27,4 @@ class NumGenSpace(spaces.space.Space):
                     return True 
         return False
     def __sample(self):
-        return np.random.randint(1, 10, size=(self.num_digits,), replace=self.repeat_digits)
+        return np.random.choice(np.arange(1, 10), size=(self.num_digits,), replace=self.repeat_digits)
