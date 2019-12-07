@@ -1,0 +1,2 @@
+from gym_guess_num.envs.guess_num_env import GuessNumEnv
+from gym_guess_num.envs.guess_num_extrahard_env import GuessNumExtraHardEnv
